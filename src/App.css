@@ -1,7 +1,6 @@
 :root {
   --primary: black;
   --bg-primary: white;
-
   --link: #2a0b0b;
 }
 
@@ -92,4 +91,17 @@ button {
   border: 1px solid #3a3a3c;
   margin-bottom: 5px;
   color: #fff;
+}
+
+.invalidated {
+  background: #121213;
+}
+.rightPosition {
+  background: #538d4e;
+}
+.wrongPosition {
+  background: #b59f3b;
+}
+.notMatched {
+  background: #3a3a3c;
 }

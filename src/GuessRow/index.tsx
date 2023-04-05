@@ -16,12 +16,12 @@ const GuessRow = ({ guessWord, secretWord, isCompleted, validate }: IGuessProps)
 
   const getColor = (i: number) => {
     if (!isCompleted) {
-      return '#121213';
+      return 'invalidated';
     } else if (guessWord[i] === secretWord?.[i]) {
-      return '#538D4E';
+      return 'rightPosition';
     } else if (secretWord?.includes(guessWord[i])) {
-      return '#B59F3B';
-    } else return '#3A3A3C';
+      return 'wrongPosition';
+    } else return 'notMatched';
   };
 
   return (
@@ -29,10 +29,7 @@ const GuessRow = ({ guessWord, secretWord, isCompleted, validate }: IGuessProps)
       {arr.map((_, i) => {
         return (
           <div
-            className="box"
-            style={{
-              background: !validate.includes(positionIndex) ? getColor(i) : '#121213',
-            }}
+            className={!validate.includes(positionIndex) ? `${getColor(i)} box` : 'box'}
             key={i}
           >
             {guessWord?.[i]}

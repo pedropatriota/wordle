@@ -9,13 +9,13 @@ function App() {
   const {
     getKey,
     validate,
-    won,
-    lost,
     guesses,
     startGame,
     positionIndex,
     getWord,
     secretWord,
+    won,
+    lost,
   } = useHelper();
 
   // Init the puzzle
@@ -34,10 +34,16 @@ function App() {
     return window.removeEventListener('keyup', (e) => getKey(e));
   }, []);
 
+  React.useEffect(() => {
+    if (won() || lost()) {
+      setTimeout(() => location.reload(), 5000);
+    }
+  }, [won, lost, positionIndex, validate]);
+
   return (
     <div className="App">
-      {won() && <h1>Kudos! You found the word!</h1>}
-      {lost() && <h1>Keep trying!!! :(</h1>}
+      {won() && <h1 style={{ background: '#fff' }}>Kudos! You found the word!</h1>}
+      {lost() && <h1 style={{ background: '#fff' }}>Keep trying!!! :(</h1>}
       {guesses.map((_, i) => (
         <GuessRow
           key={i}

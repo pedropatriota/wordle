@@ -1,9 +1,17 @@
 import React, { useCallback } from 'react';
 
+/*
+This should be a Global state to persist the data (Redux/Context), for now I'm only persisting the currentIndex,
+but the length of guess and won and lost will not work.
+I'd like to add this info as I know how to fix it
+*/
+
 const useHelper = () => {
   const [guesses, setGuesses] = React.useState<string[]>(new Array(6).fill(''));
   const [validate, setValidate] = React.useState<number[]>([]);
   const [secretWord, setSecretWord] = React.useState<string | null>(null);
+  const [puzzleWon, setPuzzleWon] = React.useState(false);
+  const [puzzleLost, setPuzzleLost] = React.useState(false);
 
   const getPositionIndex = useCallback(() => {
     const position = JSON.parse(localStorage.getItem('position') || '{}');
@@ -12,7 +20,7 @@ const useHelper = () => {
 
   const won = useCallback(() => {
     const positionIndex = getPositionIndex();
-    return guesses[positionIndex - 1] === secretWord;
+    return guesses[positionIndex].toLowerCase() === secretWord?.toLowerCase();
   }, [getPositionIndex, guesses, secretWord]);
 
   const lost = useCallback(() => {
@@ -28,14 +36,17 @@ const useHelper = () => {
   const getKey = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: any) => {
-      if (won() || lost()) {
+      const positionIndex = getPositionIndex();
+
+      if (puzzleWon || puzzleLost) {
         return;
       }
-      const positionIndex = getPositionIndex();
 
       if (e.key === 'Enter') {
         updatePosition();
         setValidate([...validate, positionIndex]);
+        setPuzzleWon(guesses[positionIndex].toLowerCase() === secretWord?.toLowerCase());
+        setPuzzleLost(positionIndex === 6);
         return;
       }
 
@@ -52,6 +63,7 @@ const useHelper = () => {
       }
 
       if (guesses[positionIndex]?.length < 5 && e.key.match(/^[A-z]$/)) {
+        console.log({ positionIndex });
         setGuesses((prevState) => {
           const newGuesses = [...prevState];
           newGuesses[positionIndex] = newGuesses[positionIndex] + e.key;
@@ -60,7 +72,16 @@ const useHelper = () => {
         return;
       }
     },
-    [getPositionIndex, won, lost, updatePosition, validate, guesses],
+    [
+      getPositionIndex,
+      updatePosition,
+      validate,
+      guesses,
+      puzzleWon,
+      puzzleLost,
+      won,
+      lost,
+    ],
   );
 
   const startGame = useCallback(() => {
@@ -95,6 +116,8 @@ const useHelper = () => {
     setSecretWord,
     secretWord,
     positionIndex: getPositionIndex(),
+    puzzleWon,
+    puzzleLost,
   };
 };
 
