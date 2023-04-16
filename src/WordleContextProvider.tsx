@@ -20,10 +20,6 @@ interface IInitialState {
   setSecretWord: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-interface IWordle {
-  children: React.ReactNode;
-}
-
 export const WordleContext = createContext({
   guesses: new Array(6).fill(''),
   validate: [],
