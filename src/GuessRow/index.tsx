@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
-import useHelper from '../useHelper';
+import { WordleContext } from '../WordleContextProvider';
 
 interface IGuessProps {
   guessWord: string;
@@ -12,7 +12,7 @@ interface IGuessProps {
 const GuessRow = ({ guessWord, secretWord, isCompleted, validate }: IGuessProps) => {
   const arr = new Array(5).fill(0);
 
-  const { positionIndex } = useHelper();
+  const { positionIndex } = useContext(WordleContext);
 
   const getColor = (i: number) => {
     if (!isCompleted) {

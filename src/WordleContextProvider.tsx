@@ -1,56 +1,57 @@
-import React, { useCallback } from 'react';
+import React, { createContext, useCallback } from 'react';
 
 /*
 This should be a Global state to persist the data (Redux/Context), for now I'm only persisting the currentIndex,
 but the length of guess and won and lost will not work.
 I'd like to add this info as I know how to fix it
 */
+interface IInitialState {
+  guesses: string[];
+  validate: number[] | [];
+  secretWord: null | string;
+  puzzleWon: boolean;
+  puzzleLost: boolean;
+  positionIndex: number;
+  getKey: (e: unknown) => void;
+  setGuesses: React.Dispatch<React.SetStateAction<string[]>>;
+  setValidate: React.Dispatch<React.SetStateAction<number[]>>;
+  startGame: () => void;
+  getWord: () => Promise<void>;
+  setSecretWord: React.Dispatch<React.SetStateAction<string | null>>;
+}
 
-const useHelper = () => {
+interface IWordle {
+  children: React.ReactNode;
+}
+
+export const WordleContext = createContext({
+  guesses: new Array(6).fill(''),
+  validate: [],
+  secretWord: null,
+  puzzleWon: false,
+  puzzleLost: false,
+  positionIndex: 0,
+} as IInitialState);
+
+const WordleContextProvider: React.FC = ({ children }) => {
   const [guesses, setGuesses] = React.useState<string[]>(new Array(6).fill(''));
   const [validate, setValidate] = React.useState<number[]>([]);
   const [secretWord, setSecretWord] = React.useState<string | null>(null);
   const [puzzleWon, setPuzzleWon] = React.useState(false);
   const [puzzleLost, setPuzzleLost] = React.useState(false);
-
-  const getPositionIndex = useCallback(() => {
-    const position = JSON.parse(localStorage.getItem('position') || '{}');
-    return Number(position);
-  }, []);
-
-  const won = useCallback(() => {
-    const positionIndex = getPositionIndex();
-    return guesses[positionIndex].toLowerCase() === secretWord?.toLowerCase();
-  }, [getPositionIndex, guesses, secretWord]);
-
-  const lost = useCallback(() => {
-    const positionIndex = getPositionIndex();
-    return positionIndex === 6;
-  }, [getPositionIndex]);
-
-  const updatePosition = useCallback(() => {
-    const positionIndex = getPositionIndex();
-    localStorage.setItem('position', (positionIndex + 1).toString());
-  }, [getPositionIndex]);
+  const [positionIndex, setPositionIndex] = React.useState(0);
 
   const getKey = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (e: any) => {
-      const positionIndex = getPositionIndex();
-
       if (puzzleWon || puzzleLost) {
         return;
       }
 
       if (e.key === 'Enter') {
-        updatePosition();
         setValidate([...validate, positionIndex]);
-        setPuzzleWon(guesses[positionIndex].toLowerCase() === secretWord?.toLowerCase());
-        setPuzzleLost(positionIndex === 6);
-        return;
-      }
-
-      if (e.key === 'Backspace') {
+        setPositionIndex(positionIndex + 1);
+      } else if (e.key === 'Backspace') {
         setGuesses((prevState) => {
           const newGuesses = [...prevState];
           newGuesses[positionIndex] = newGuesses[positionIndex].slice(
@@ -59,29 +60,15 @@ const useHelper = () => {
           );
           return newGuesses;
         });
-        return;
-      }
-
-      if (guesses[positionIndex]?.length < 5 && e.key.match(/^[A-z]$/)) {
-        console.log({ positionIndex });
+      } else if (guesses[positionIndex]?.length < 5 && e.key.match(/^[A-z]$/)) {
         setGuesses((prevState) => {
           const newGuesses = [...prevState];
           newGuesses[positionIndex] = newGuesses[positionIndex] + e.key;
           return newGuesses;
         });
-        return;
       }
     },
-    [
-      getPositionIndex,
-      updatePosition,
-      validate,
-      guesses,
-      puzzleWon,
-      puzzleLost,
-      won,
-      lost,
-    ],
+    [positionIndex, validate, guesses, puzzleWon, puzzleLost],
   );
 
   const startGame = useCallback(() => {
@@ -103,11 +90,22 @@ const useHelper = () => {
     }
   }, []);
 
-  return {
+  React.useEffect(() => {
+    console.log(validate, positionIndex);
+    if (
+      guesses[positionIndex]?.toLowerCase() === secretWord?.toLocaleLowerCase() &&
+      validate.includes(positionIndex)
+    ) {
+      setPuzzleWon(true);
+    }
+    if (positionIndex === 6) {
+      setPuzzleLost(true);
+    }
+  }, [secretWord, validate, guesses[positionIndex]]);
+
+  const value = {
     getKey,
     validate,
-    won,
-    lost,
     guesses,
     setGuesses,
     setValidate,
@@ -115,10 +113,12 @@ const useHelper = () => {
     getWord,
     setSecretWord,
     secretWord,
-    positionIndex: getPositionIndex(),
+    positionIndex,
     puzzleWon,
     puzzleLost,
   };
+
+  return <WordleContext.Provider value={value}>{children}</WordleContext.Provider>;
 };
 
-export default useHelper;
+export default WordleContextProvider;
